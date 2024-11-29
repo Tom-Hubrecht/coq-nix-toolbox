@@ -5,7 +5,7 @@ export configDir=$currentDir/.nix
 
 nixCommands=()
 addNixCommand (){
-  nixCommands+=($1)
+  nixCommands+=("$1")
 }
 
 nixHelp (){
@@ -16,13 +16,13 @@ nixHelp (){
 printNixEnv () {
   echo "Here is your work environement"
   echo "nativeBuildInputs:"
-  for x in $nativeBuildInputs; do printf -- "- "; echo $x | cut -d "-" -f "2-"; done
+  for x in $nativeBuildInputs; do printf -- "- "; echo "$x" | cut -d "-" -f "2-"; done
   echo "propagatedNativeBuildInputs:"
-  for x in $propagatedNativeBuildInputs; do printf -- "- "; echo $x | cut -d "-" -f "2-"; done
+  for x in $propagatedNativeBuildInputs; do printf -- "- "; echo "$x" | cut -d "-" -f "2-"; done
   echo "buildInputs:"
-  for x in $buildInputs; do printf -- "- "; echo $x | cut -d "-" -f "2-"; done
+  for x in $buildInputs; do printf -- "- "; echo "$x" | cut -d "-" -f "2-"; done
   echo "propagatedBuildInputs:"
-  for x in $propagatedBuildInputs; do printf -- "- "; echo $x | cut -d "-" -f "2-"; done
+  for x in $propagatedBuildInputs; do printf -- "- "; echo "$x" | cut -d "-" -f "2-"; done
   echo "you can pass option --arg override '{coq = \"x.y\"; ...}' to nix-shell to change packages versions"
 }
 addNixCommand printNixEnv
@@ -31,44 +31,44 @@ ppNixEnv () {
   echo "Available packages:"
   for x in $nativeBuildInputs
   do printf -- "- "
-     pkgv=$(echo $x | cut -d "-" -f "2-")
-     echo $(echo $pkgv | sed "s/coq[0-9][^\-]*-//")
+     pkgv=$(echo "$x" | cut -d "-" -f "2-")
+     echo "${pkgv//coq[0-9][^\-]*-//}"
   done
   for x in $propagatedNativeBuildInputs
   do printf -- "- "
-     pkgv=$(echo $x | cut -d "-" -f "2-")
-     echo $(echo $pkgv | sed "s/coq[0-9][^\-]*-//")
+     pkgv=$(echo "$x" | cut -d "-" -f "2-")
+     echo "${pkgv//coq[0-9][^\-]*-//}"
   done
   for x in $buildInputs
   do printf -- "- "
-     pkgv=$(echo $x | cut -d "-" -f "2-")
-     echo $(echo $pkgv | sed "s/coq[0-9][^\-]*-//")
+     pkgv=$(echo "$x" | cut -d "-" -f "2-")
+     echo "${pkgv//coq[0-9][^\-]*-//}"
   done
   for x in $propagatedBuildInputs
   do printf -- "- "
-     pkgv=$(echo $x | cut -d "-" -f "2-")
-     echo $(echo $pkgv | sed "s/coq[0-9][^\-]*-//")
+     pkgv=$(echo "$x" | cut -d "-" -f "2-")
+     echo "${pkgv//coq[0-9][^\-]*-//}"
   done
 }
 addNixCommand ppNixEnv
 
 nixEnv () {
-  for x in $nativeBuildInputs; do echo $x; done
-  for x in $propagatedNativeBuildInputs; do echo $x; done
-  for x in $buildInputs; do echo $x; done
-  for x in $propagatedBuildInputs; do echo $x; done
+  for x in $nativeBuildInputs; do echo "$x"; done
+  for x in $propagatedNativeBuildInputs; do echo "$x"; done
+  for x in $buildInputs; do echo "$x"; done
+  for x in $propagatedBuildInputs; do echo "$x"; done
 }
 addNixCommand nixEnv
 
 updateNixToolBox () {
   HASH=$(git ls-remote https://github.com/coq-community/coq-nix-toolbox refs/heads/master | cut -f1)
-  mkdir -p $configDir
-  echo "\"$HASH\"" > $configDir/coq-nix-toolbox.nix
+  mkdir -p "$configDir"
+  echo "\"$HASH\"" > "$configDir/coq-nix-toolbox.nix"
 }
 addNixCommand updateNixToolBox
 
 generateNixDefault () {
-  cat $toolboxDir/project-default.nix > $currentDir/default.nix
+  cat "$toolboxDir/project-default.nix" > "$currentDir/default.nix"
   updateNixToolBox
 }
 addNixCommand generateNixDefault
@@ -76,24 +76,24 @@ addNixCommand generateNixDefault
 updateNixpkgsUnstable (){
   HASH=$(git ls-remote https://github.com/NixOS/nixpkgs refs/heads/nixpkgs-unstable | cut -f1);
   URL=https://github.com/NixOS/nixpkgs/archive/$HASH.tar.gz
-  SHA256=$(nix-prefetch-url --unpack $URL)
-  mkdir -p $configDir
+  SHA256=$(nix-prefetch-url --unpack "$URL")
+  mkdir -p "$configDir"
   echo "fetchTarball {
     url = \"$URL\";
     sha256 = \"$SHA256\";
-  }" > $configDir/nixpkgs.nix
+  }" > "$configDir/nixpkgs.nix"
 }
 addNixCommand updateNixpkgsUnstable
 
 updateNixpkgsMaster (){
   HASH=$(git ls-remote https://github.com/NixOS/nixpkgs refs/heads/master | cut -f1)
   URL=https://github.com/NixOS/nixpkgs/archive/$HASH.tar.gz
-  SHA256=$(nix-prefetch-url --unpack $URL)
-  mkdir -p $configDir
+  SHA256=$(nix-prefetch-url --unpack "$URL")
+  mkdir -p "$configDir"
   echo "fetchTarball {
     url = \"$URL\";
     sha256 = \"$SHA256\";
-  }" > $configDir/nixpkgs.nix
+  }" > "$configDir/nixpkgs.nix"
 }
 addNixCommand updateNixpkgsMaster
 
@@ -102,12 +102,12 @@ updateNixpkgs (){
   then if [[ -n "$2" ]]; then B=$2; else B="master"; fi
        HASH=$(git ls-remote https://github.com/$1/nixpkgs refs/heads/$B | cut -f1)
        URL=https://github.com/$1/nixpkgs/archive/$HASH.tar.gz
-       SHA256=$(nix-prefetch-url --unpack $URL)
-       mkdir -p $configDir
+       SHA256=$(nix-prefetch-url --unpack "$URL")
+       mkdir -p "$configDir"
        echo "fetchTarball {
          url = \"$URL\";
          sha256 = \"$SHA256\";
-       }" > $configDir/nixpkgs.nix
+       }" > "$configDir/nixpkgs.nix"
   else
       echo "error: usage: updateNixpkgs <github username> [branch]"
       echo "otherwise use updateNixpkgsUnstable or updateNixpkgsMaster"
@@ -116,52 +116,52 @@ updateNixpkgs (){
 addNixCommand updateNixpkgs
 
 nixBundle (){
-    echo $jsonBundle
+    echo "$jsonBundle"
 }
 addNixCommand nixBundle
 
 ppBundle (){
-    echo $jsonBundle | json2yaml
+    echo "$jsonBundle" | json2yaml
 }
 addNixCommand ppBundle
 
 nixBundles (){
-    echo $jsonBundles
+    echo "$jsonBundles"
 }
 addNixCommand nixBundles
 
 ppBundles (){
-    echo $jsonBundles | json2yaml
+    echo "$jsonBundles" | json2yaml
 }
 addNixCommand ppBundles
 
 ppBundleSet (){
-    echo $jsonBundleSet | json2yaml
+    echo "$jsonBundleSet" | json2yaml
 }
 addNixCommand ppBundleSet
 
 ppCIbyBundle (){
-    echo $jsonCIbyBundle | json2yaml
+    echo "$jsonCIbyBundle" | json2yaml
 }
 addNixCommand ppCIbyBundle
 
 ppCIbyJob (){
-    echo $jsonCIbyJob | json2yaml
+    echo "$jsonCIbyJob" | json2yaml
 }
 addNixCommand ppCIbyJob
 
 ppDeps (){
-    echo $jsonPkgsDeps | json2yaml
+    echo "$jsonPkgsDeps" | json2yaml
 }
 addNixCommand ppDeps
 
 ppRevDeps (){
-    echo $jsonPkgsRevDeps | json2yaml
+    echo "$jsonPkgsRevDeps" | json2yaml
 }
 addNixCommand ppRevDeps
 
 ppSetupConfig (){
-  echo $jsonSetupConfig | json2yaml
+  echo "$jsonSetupConfig" | json2yaml
 }
 addNixCommand ppSetupConfig
 
@@ -171,10 +171,10 @@ ppNixAction (){
 addNixCommand ppNixAction
 
 genNixActions (){
-  mkdir -p $currentDir/.github/workflows/
+  mkdir -p "$currentDir/.github/workflows/"
   for t in $bundles; do
     echo "generating $currentDir/.github/workflows/nix-action-$t.yml"
-    nix-shell --arg do-nothing true --argstr bundle $t --run "ppNixAction > $currentDir/.github/workflows/nix-action-$t.yml"
+    nix-shell --arg do-nothing true --argstr bundle "$t" --run "ppNixAction > $currentDir/.github/workflows/nix-action-$t.yml"
   done
 }
 addNixCommand genNixActions
@@ -184,10 +184,11 @@ initNixConfig (){
   F=$configDir/config.nix;
   if [[ -f $F ]]; then
      echo "$F already exists"
-  else if [[ -n "$1" ]]; then
-       mkdir -p $configDir
-       cat $Orig > $F
-       sed -i "s/template/$1/" $F
+  else
+    if [[ -n "$1" ]]; then
+       mkdir -p "$configDir"
+       cat "$Orig" > "$F"
+       sed -i "s/template/$1/" "$F"
     else echo "usage: initNixConfig pname"
     fi
   fi
@@ -198,20 +199,20 @@ createOverlay (){
   Orig=$toolboxDir/template-overlay.nix
   if [[ -n "$1" ]]; then
        D=$configDir/coq-overlays/$1;
-       mkdir -p $D
-       cat $Orig > $D/default.nix
-       sed -i "s/template/$1/" $D/default.nix
+       mkdir -p "$D"
+       cat "$Orig" > "$D/default.nix"
+       sed -i "s/template/$1/" "$D/default.nix"
     else echo "usage: createOverlay pname"
   fi
 }
 addNixCommand createOverlay
 
 fetchCoqOverlay (){
-  F=$nixpkgs/pkgs/development/coq-modules/$1/default.nix
-  D=$configDir/coq-overlays/$1/
+  F="$nixpkgs/pkgs/development/coq-modules/$1/default.nix"
+  D="$configDir/coq-overlays/$1/"
   if [[ -f "$F" ]]
-    then mkdir -p $D; cp $F $D; chmod u+w ${D}default.nix;
-         git add ${D}default.nix
+    then mkdir -p "$D"; cp "$F" "$D"; chmod u+w "${D}default.nix";
+         git add "${D}default.nix"
          echo "You may now amend ${D}default.nix"
     else echo "usage: fetchCoqOverlay pname"
   fi
@@ -219,36 +220,36 @@ fetchCoqOverlay (){
 addNixCommand fetchCoqOverlay
 
 my-nix-build (){
-  if [ ${NIX_PATH} ]; then
+  if [ "${NIX_PATH}" ]; then
     SET_NIX_PATH=NIX_PATH="${NIX_PATH}"
   fi
-  if [ ${https_proxy} ]; then
+  if [ "${https_proxy}" ]; then
     SET_https_proxy=https_proxy="${https_proxy}"
   fi
-  env -i PATH=$PATH ${SET_NIX_PATH} ${SET_https_proxy} nix-build \
+  env -i PATH="$PATH" "${SET_NIX_PATH}" "${SET_https_proxy}" nix-build \
     --argstr bundle "$selectedBundle" --no-out-link\
-    --option narinfo-cache-negative-ttl 0 $*
+    --option narinfo-cache-negative-ttl 0 "$@"
 }
 
 cachedMake (){
   cproj=$currentDir/$coqproject
-  cprojDir=$(dirname $cproj)
+  cprojDir=$(dirname "$cproj")
   nb_dry_run=$(my-nix-build --dry-run 2>&1 > /dev/null)
-  if echo $nb_dry_run | grep -q "built:"; then
+  if echo "$nb_dry_run" | grep -q "built:"; then
     echo "The compilation result is not in cache."
     echo "Either it is not in cache (yet) or your must check your cachix configuration."
     kill -INT $$
   else
     build=$(my-nix-build)
-    grep -e "^-R.*" $cproj | while read -r line; do
-      realpath=$(echo $line | cut -d" " -f2)
-      namespace=$(echo $line | cut -d" " -f3)
+    grep -e "^-R.*" "$cproj" | while read -r line; do
+      realpath=$(echo "$line" | cut -d" " -f2)
+      namespace=$(echo "$line" | cut -d" " -f3)
       logpath=${namespace/.//}
       vopath="$build/lib/coq/$coq_version/user-contrib/$logpath"
       dest=$cprojDir/$realpath
       if [[ -d $vopath ]]
       then echo "Compiling/Fetching and copying vo from $vopath to $realpath"
-           cp -nr --no-preserve=mode,ownership  $vopath/* $dest
+           cp -nr --no-preserve=mode,ownership  "$vopath"/* "$dest"
       else echo "Error: cannot find compiled $logpath, check your .nix/config.nix"
       fi
     done
@@ -261,9 +262,9 @@ then
 emacs (){
   F=$currentDir/.emacs
   if ! [[ -f "$F" ]]
-  then cp -u $emacsInit $F
+  then cp -u "$emacsInit" "$F"
   fi
-  $emacsBin -q --load $F $*
+  $emacsBin -q --load "$F" "@"
 }
 addNixCommand emacs
 fi
